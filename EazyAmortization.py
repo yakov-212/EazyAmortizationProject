@@ -242,11 +242,11 @@ paid_entry.grid(row=1, column=3, pady=5, padx=5)
 
 
 format_button = tk.Button(input_frame, text="Enter",padx=20,command=button_pressed,cursor="hand2")
-format_button.grid(pady=10, row=2, column=1)
+format_button.grid(pady=10, row=2, column=3)
 
 open_button = tk.Button(input_frame, text="Open",padx=20,command=open_pressed,cursor="hand2")
 open_button.grid(pady=10, row=2, column=2)
 
 delete_button = tk.Button(input_frame, text="Delete",padx=20,command=delete_pressed,cursor="hand2")
-delete_button.grid(pady=10,row=2,column=3)
+delete_button.grid(pady=10,row=2,column=1)
 root.mainloop()
