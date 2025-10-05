@@ -57,7 +57,7 @@ def update_drop():
     drop_widget = tk.OptionMenu(root, drop_opt, *entries)
     drop_widget.place(x=175,y=100)
 
-def button_pressed():
+def enter_pressed():
     if not date_validate():
         return
     date_ls = date_var.get().split("-")
@@ -115,7 +115,11 @@ def show_warning(title,message):
 
 def write_to_excel(client,date_date,paid):
     path = resource_path(f"EazyAmortization\\{client}.xlsx")
-    workbook = openpyxl.load_workbook(path)
+    try:
+        workbook = openpyxl.load_workbook(path)
+    except PermissionError:
+        show_alert("File Open","You must close the file before hitting Enter")
+        return
     sheet = workbook["Amortization Fixed"]
 
     date_book = workbook["Cover"]
@@ -137,24 +141,29 @@ def write_to_excel(client,date_date,paid):
     paid_cell.value = paid
     paid_cell.alignment = Alignment(horizontal="center",vertical="center")
     
-    try:
-        workbook.save(path)
-    except PermissionError:
-        show_alert("File Open","You must close the file before saving")
-        return
+
+    workbook.save(path)
+
     show_alert("Payment Made",f"{paid} paid on {date_date.strftime(r"%m/%d/%Y")}")
+    date_var.set(change_date_cell(client).strftime(r"%m-%d-%Y"))
 
 
+    
 def months_apart(dt1,dt2):
     dy = dt2.year - dt1.year
     dm = dt2.month - dt1.month
     return dy*12+dm+2
 
 def get_date_cell(client):
-    date_val = get_last_paid(client,False)
-    date_date = date_val.value.date()
-    d = date(date_date.year, date_date.month +1,1)
-    return d.strftime(r"%m-%d-%Y")
+    return get_last_paid(client,False).value.date()
+    
+    #.strftime(r"%m-%d-%Y")
+def change_date_cell(client):
+    d = get_date_cell(client)
+    if d.month == 12:
+        return date(d.year +1,1,1)
+    else:
+        return date(d.year,d.month +1, 1)
 
 def get_expected_paid_cell(client):
     expected_paid = get_last_paid(client,True)
@@ -184,7 +193,7 @@ def get_last_paid(client,boolean):
     return expected_paid
 
 def switch_vars(self):
-    date_var.set(get_date_cell(self))
+    date_var.set(get_date_cell(self).strftime(r"%m-%d-%Y"))
     paid_var.set(get_expected_paid_cell(self))
 
 def open_pressed():
@@ -224,7 +233,7 @@ input_frame.pack(pady=50, padx=10, fill="x")
 vd = root.register(only_num)
 
 date_var = tk.StringVar()
-date_var.set(get_date_cell(drop_opt.get()))
+date_var.set(get_date_cell(drop_opt.get()).strftime(r"%m-%d-%Y"))
 
 date_label = tk.Label(input_frame, text="Enter Date (MM-DD-YYYY):")
 date_label.grid(row=1, column=0, sticky="w", pady=5, padx=5)
@@ -241,7 +250,7 @@ paid_entry.grid(row=1, column=3, pady=5, padx=5)
 
 
 
-format_button = tk.Button(input_frame, text="Enter",padx=20,command=button_pressed,cursor="hand2")
+format_button = tk.Button(input_frame, text="Enter",padx=20,command=enter_pressed,cursor="hand2")
 format_button.grid(pady=10, row=2, column=3)
 
 open_button = tk.Button(input_frame, text="Open",padx=20,command=open_pressed,cursor="hand2")
