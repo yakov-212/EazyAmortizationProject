@@ -54,7 +54,7 @@ def update_drop():
     entries = get_drop_items()
     drop_widget.destroy()
     drop_opt.set(entries[0])
-    drop_widget = tk.OptionMenu(root, drop_opt, *entries)
+    drop_widget = tk.OptionMenu(root, drop_opt, *entries,command=switch_vars)
     drop_widget.place(x=175,y=100)
 
 def enter_pressed():
@@ -125,9 +125,11 @@ def write_to_excel(client,date_date,paid):
     date_book = workbook["Cover"]
     date_val = date_book["D4"]
     row = months_apart(date_val.value,date_date)
-
-    date_cell = sheet[f"C{row}"]
-    paid_cell = sheet[f"N{row}"]
+    try:
+        date_cell = sheet[f"C{row}"]
+        paid_cell = sheet[f"N{row}"]
+    except ValueError:
+        show_alert("Incorrect Date","The date that was entered is earlier than the starting date")
 
     if date_cell.value != None or paid_cell.value != None:
         if not show_warning("Replace Payment Info",f"Replace payment of {paid_cell.value} on {date_cell.value.strftime(r"%m/%d/%Y")} "
@@ -174,7 +176,7 @@ def get_expected_paid_cell(client):
 def get_last_paid(client,boolean):
     path = resource_path(f"EazyAmortization\\{client}.xlsx")
     try:
-        workbook = openpyxl.load_workbook(path)
+        workbook = openpyxl.load_workbook(path,data_only=True)
     except PermissionError:
         show_alert("Permission Denied Error",f"{client} is open.\nClose the file to continue")
 
@@ -187,9 +189,13 @@ def get_last_paid(client,boolean):
         if sheet[f"N{i}"].value is not None:
             expected_paid = sheet[f"{col}{i}"]
             break
-    if not boolean:
-        if expected_paid.value == None:
-            return workbook["Cover"]["D4"]    
+    
+    if expected_paid.value == None:
+        if boolean:
+            return workbook["Cover"]["D18"]
+        else:
+            return workbook["Cover"]["D4"]
+        
     return expected_paid
 
 def switch_vars(self):
@@ -202,6 +208,7 @@ def delete_pressed():
     if show_warning("Delete File",f"Are you sure you want to delete {drop_opt.get()}") and os.path.exists(f"EazyAmortization\\{drop_opt.get()}.xlsx"):
         os.remove(resource_path(f"EazyAmortization\\{drop_opt.get()}.xlsx"))
         update_drop()
+        switch_vars(drop_opt.get())
 root = tk.Tk()
 root.title("Eazy Amortization")
 root.geometry("500x350") 
