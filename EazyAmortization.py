@@ -56,6 +56,7 @@ def update_drop():
     drop_opt.set(entries[0])
     drop_widget = tk.OptionMenu(root, drop_opt, *entries,command=switch_vars)
     drop_widget.place(x=175,y=100)
+    switch_vars(drop_opt.get())
 
 def enter_pressed():
     if not date_validate():
